@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from copy import deepcopy
+from copy import deepcopy, copy
 OPERATORS={"+":lambda x, y: x+y, "-":lambda x, y: x-y, "*":lambda x, y: x*y, "/":lambda x, y: x/y, "**":lambda x, y: x**y}
 LIST_LIMIT=256
 Natural=(0, float("inf"), 1, False)
@@ -169,10 +169,10 @@ class MathObject(type):
     def __new__(self, name, bases, namespace):
         for o, n, func in [("+", "__add__", __add__), ("-", "__sub__", __sub__), ("*", "__mul__", __mul__), ("/", "__truediv__", __truediv__), ("**", "__pow__", __pow__)]:
             if n in namespace:
-                x=namespace[n]()
-                namespace[n]=lambda x1, x2, o=o: x[1](x1.func+[o, x2.func]) if type(x2)==x[0] else func(x1, x2)
+                x, f=namespace[n](), copy(func)
+                namespace[n]=lambda x1, x2, o=o: x[1](x1.func+[o, x2.func]) if type(x2)==x[0] else f(x1, x2)
             else:
-                namespace[n]=func
+                namespace[n]=copy(func)
         if "__iter__" in namespace:
             namespace["iter"]=namespace["__iter__"]()
         namespace.update({"get": lambda self, *args, edit=False, **kwargs: type(self)(get(self, args, edit, kwargs)), "show": show, "__iter__": to_list, "to_list": to_list, "__neg__": __neg__})
@@ -188,7 +188,7 @@ class MathObject(type):
         new_instance.type=kwargs if arg==None else arg
         new_instance.func=func if type(func)==list else compile_text(func) if type(func)==str else [func]
         if hasattr(new_instance, "__arg__"):
-            func=new_instance.get(new_instance.__arg__())
+            func=get(new_instance, kwargs=new_instance.__arg__())
             new_instance.func=func if type(func)==list else compile_text(func) if type(func)==str else [func]
         if hasattr(new_instance, "iter"):
             new_instance.func=[new_instance.iter[0](f) for f in func[:new_instance.iter[1]]]
