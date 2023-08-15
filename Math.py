@@ -40,7 +40,7 @@ def compile_text(func=None):
         i+=1
     return res
 
-def get(self, *args, edit:bool=False, **kwargs):
+def get(self, args=(), edit=False, kwargs={}):
     if type(type(self.func[0]))==type(type(self)):
         return [calculate(self, f.func, [args, kwargs]) for f in self.func if type(type(f))==type(type(self))]
     if len(args)>0 and type(args[0])==dict:
@@ -159,8 +159,8 @@ def to_str(self):
         res="("+str([f.__str__() for f in self.func if type(type(f))==type(type(self))]).replace("'", "")[1:-1]+")"
     else:
         res=calc_str(self.func)
-    if type(self.get())!=list:
-        return str(self.get())
+    if type(get(self))!=list:
+        return str(get(self))
     for k, v in self.type.items():
         res+="\n"+(str(v[0])+'<=' if v[0]!=float('-inf') else '')+(k)+('<='+str(v[1]) if v[1]!=float('inf') else '')+(' step='+str(v[2]) if v[2]!=0 else '')+(' complex' if v[3] else ' real')
     return res
@@ -175,7 +175,7 @@ class MathObject(type):
                 namespace[n]=func
         if "__iter__" in namespace:
             namespace["iter"]=namespace["__iter__"]()
-        namespace.update({"get": get, "show": show, "__iter__": to_list, "to_list": to_list, "__neg__": __neg__})
+        namespace.update({"get": lambda self, *args, edit=False, **kwargs: type(self)(get(self, args, edit, kwargs)), "show": show, "__iter__": to_list, "to_list": to_list, "__neg__": __neg__})
         if not "__str__" in namespace:
             namespace["__str__"]=to_str
         else:
